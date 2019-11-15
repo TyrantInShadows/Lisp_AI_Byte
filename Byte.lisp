@@ -62,3 +62,4 @@
     (length (car (cdr (PronadjiElement i j l))))
 )
 (setq a 55)
+(defun test)
