@@ -61,3 +61,4 @@
 (defun VisinaSteka (i j l)
     (length (car (cdr (PronadjiElement i j l))))
 )
+(defun test)
