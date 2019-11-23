@@ -9,7 +9,7 @@
  )
 
 (defun test (l)
-    
+  (car (cdr (car (cdr (car l)))) )
 )
 (defun PocetneOpcije ()
     (setf state
@@ -18,21 +18,34 @@
     )
     (princ "Unesite 8 ili 10 u zavisnosti od velicine tabele na kojoj zelite da igrate: ")
     (setf (gameState-velicinaTable state) (read))
-    (GenerisiTabelu (gameState-velicinaTable state) 0)
+    ;;(GenerisiTabelu (gameState-velicinaTable state) 0)
+
+    (setf (gameState-tabla state)
+    '(((B NIL) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL))
+    ((W NIL) (B NIL) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL) (B NIL))
+    ((B NIL) (W NIL) (B (X)) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL))
+    ((W NIL) (B NIL) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL) (B NIL))
+    ((B NIL) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL))
+    ((W NIL) (B NIL) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL) (B NIL))
+    ((B NIL) (W NIL) (B (X)) (W NIL) (B NIL) (W NIL) (B NIL) (W NIL))
+    ((W NIL) (B NIL) (W NIL) (B (O)) (W NIL) (B NIL) (W NIL) (B NIL))))
     (princ "Unesite P ili K u zavisnosti da li zelite igrac ili racunar da igra prvi, respektivno: ")
     (setf (gameState-prviIgra state) (read))
+    ;;(princ (OdrediNajblizi 2 2 (gameState-velicinaTable state) (gameState-tabla state) 0))
+    (LegitimnoPomeranjeNaPrazno 2 2 2 4)
 
-    (setf (gameState-tabla state) (PronadjiElement+ 1 2 (gameState-tabla state) 0 t "dodaj" 'X))
-    (setf (gameState-tabla state) (PronadjiElement+ 1 2 (gameState-tabla state) 0 t "dodaj" 'O))
-    (setf (gameState-tabla state) (PronadjiElement+ 1 1 (gameState-tabla state) 0 t "izbaci" 'X))
+    ;; (setf (gameState-tabla state) (PronadjiElement+ 1 2 (gameState-tabla state) 0 t "dodaj" 'X))
+    ;; (setf (gameState-tabla state) (PronadjiElement+ 1 2 (gameState-tabla state) 0 t "dodaj" 'O))
+    ;; (setf (gameState-tabla state) (PronadjiElement+ 1 1 (gameState-tabla state) 0 t "izbaci" 'X))
 )
+;;za generisanje tabele 
 (defun GenerisiTabelu(velicina i)
     (cond
         ((equalp velicina i)'())
         (t(setf (gameState-tabla state) (cons (GenerisiRed i 0) (GenerisiTabelu velicina (1+ i)))))
     )
 )
-
+;;za generisanje reda u matrici (i-Br_reda,j-Br_kolone)
 (defun GenerisiRed(i j)
     (cond
         ((equalp j 8)'())
@@ -40,7 +53,7 @@
         (t (cons (list 'W '()) (GenerisiRed i (1+ j))))
     )
 )
-
+;;odredjuje koja vrsta diska ce biti na toj poziciji(i-Br_reda)
 (defun OdrediDisk (i)
     (cond
         ((OR (equalp i 0) (equal i 7))'())
@@ -48,11 +61,11 @@
         (t (list 'O))
     )
 )
-
+;;Vraca specificno polje (i-BR_reda,j-Br_kolone,l-tabela )
 (defun PronadjiElement (i j l)
     (PronadjiElement1 j (PronadjiElement1  i l 0) 0)
 )
-
+;;Sluzi za dodavanje i izbacivanje elementa na/sa polja(i,j-koordinate polja,l-tabela,bool-kad je true onda trazimo red false kolonu,operacija da li izbacujemo ili ubacujemo elemnt, el-koj element ubacujemo/visina sa koje izbacujemo)
 (defun PronadjiElement+ (i j l index bool operacija el)
     (cond 
         ((null l)'())
@@ -60,11 +73,12 @@
                         (cons (PronadjiElement+ j i (car l) 0 '() operacija el) (cdr l))
                         (if (equalp operacija "dodaj") 
                             (cons (cons (car (car l)) (list (DodajElement (car (cdr (car l))) el))) (cdr l))
-                            (cons (cons (car (car l))(list (IzbaciElement (car (cdr (car l))) (length (car (cdr (car l)))) 0))) (cdr l))  
+                            (cons (cons (car (car l))(list (IzbaciElement (car (cdr (car l))) (length (car (cdr (car l)))) 0 el))) (cdr l))  
                         )))
         (t(cons (car l) (PronadjiElement+ i j (cdr l) (1+ index) bool operacija el)))
     )
 )
+;;Pronalazi element liste(i-mesto u listi, l-lista,index-brojac)
 (defun PronadjiElement1 (i l index)
     (cond 
         ((null l)'())
@@ -72,84 +86,82 @@
         (t(PronadjiElement1 i (cdr l) (1+ index)))
     )
 )
-
+;;Odredjuje visinu steka(l-stek)
 (defun VisinaSteka (l)
     (length (car (cdr l)))
 )
-
+;;pomocna funkcija za Pronadjielement+ poziva se da bi dodao odgovarajuci el
 (defun DodajElement (l el)
     (cond
         ((null l)(list el))
         (t(cons (car l) (DodajElement (cdr l) el)))
     )
 )
-
-(defun IzbaciElement (l duzina index)
+;;pomocna funkcija za Pronadjielement+ poziva se da bi izbacio odredjene elemente visine el sa steka(l-lista, duzina-duzina te liste, index-brojac, visina-visina sa koje izbacujemo)
+(defun IzbaciElement (l duzina index visina)
     (cond
         ((null l)'())
-        ((equalp (- 1 duzina) index)'())
+        ((equalp (- 1 (- duzina visina)) index)'())
         (t(cons (car l) (IzbaciElement (cdr l) duzina (1+ index))))
     )
 )
-
-(defun test(l)
-    (car (cdr (car l)))
-)
-
+;;Fala bogu stigo smo do kraj, konacna funkcija za proveru da lli je pomeranje na prazno polje adekvatno
 (defun LegitimnoPomeranjeNaPrazno (iDiska jDiska iPomeraj jPomeraj)
-    (setf (OdrediNajblizi iDiska jDiska (gameState-velicinaTable state) (gameState-tabla state) 0) lista)
+    (setf lista (OdrediNajblizi iDiska jDiska (gameState-velicinaTable state) (gameState-tabla state) 0))
     (cond
-        ((AND(< (- iPomeraj iDiska) 0)(< (- jPomeraj jDiska) 0)) (ProveriKavadrant iPomeraj jPomeraj 1 lista))
-        ((AND(> (- iPomeraj iDiska) 0)(> (- jPomeraj jDiska) 0)) (ProveriKavadrant iPomeraj jPomeraj 2 lista))
-        ((AND(< (- iPomeraj iDiska) 0)(> (- jPomeraj jDiska) 0)) (ProveriKavadrant iPomeraj jPomeraj 3 lista))
-        ((AND(> (- iPomeraj iDiska) 0)(< (- jPomeraj jDiska) 0)) (ProveriKavadrant iPomeraj jPomeraj 4 lista))
+        ((AND (< (- iPomeraj iDiska) 0)(< (- jPomeraj jDiska) 0)) (ProveriKavadrant iPomeraj jPomeraj 1 lista))
+        ((AND (> (- iPomeraj iDiska) 0)(> (- jPomeraj jDiska) 0)) (ProveriKavadrant iPomeraj jPomeraj 2 lista))
+        ((AND (< (- iPomeraj iDiska) 0)(> (- jPomeraj jDiska) 0)) (ProveriKavadrant iPomeraj jPomeraj 3 lista))
+        ((AND (> (- iPomeraj iDiska) 0)(< (- jPomeraj jDiska) 0)) (ProveriKavadrant iPomeraj jPomeraj 4 lista))
     )
 )
-
+;;pomocna funkcija za LegitimnoPomeranjeNaPrazno proverava da li je potez validan (iPomeraj,jPomeraj-kordinate gde pomeramo, kon-kondition tj koj trougao gledamo, l lista sa kojom radimo)
 (defun ProveriKavadrant (iPomeraj jPomeraj kon l)
     (cond
         ((null l)'())
-        ((equalp kon 1) (if (>= (+ iPomeraj jPomeraj) (+ (car (car (cdr (car l)))) (cdr (car (cdr (car l)))) ))
-                            (t)
+        ((equalp kon 1) (if (>= (+  iPomeraj jPomeraj) (+ (car (car (cdr (car l)))) (car (cdr (car (cdr (car l)))) )))
+                            t
                             (ProveriKavadrant iPomeraj jPomeraj kon (cdr l))
                         ))
-        ((equalp kon 2) (if (<= (+ iPomeraj jPomeraj) (+ (car (car (cdr (car l)))) (cdr (car (cdr (car l)))) ))
-                            (t)
+        ((equalp kon 2) (if (<= (+ iPomeraj jPomeraj) (+ (car (car (cdr (car l)))) (car (cdr (car (cdr (car l)))) )))
+                            t
                             (ProveriKavadrant iPomeraj jPomeraj kon (cdr l))
                         ))
-        ((equalp kon 3) (if (>= (- iPomeraj jPomeraj) (- (car (car (cdr (car l)))) (cdr (car (cdr (car l)))) ))
-                            (t)
+        ((equalp kon 3) (if (>= (- iPomeraj jPomeraj) (- (car (car (cdr (car l)))) (car (cdr (car (cdr (car l)))) )))
+                            t
                             (ProveriKavadrant iPomeraj jPomeraj kon (cdr l))
                         ))
-        ((equalp kon 4) (if (<= (- iPomeraj jPomeraj) (- (car (car (cdr (car l)))) (cdr (car (cdr (car l)))) ))
-                            (t)
+        ((equalp kon 4) (if (<= (- iPomeraj jPomeraj) (- (car (car (cdr (car l)))) (car (cdr (car (cdr (car l)))) )))
+                            t
                             (ProveriKavadrant iPomeraj jPomeraj kon (cdr l))
                         ))
     )
 )
 
+;;Vraca samo one na najmanjem nivou 
 (defun OdrediNajblizi (iDiska jDiska maxi l index)
-    (append (gameState-popunjenaPolja state) (ParLista (- iDiska index) (+ iDiska index) l maxi iDiska jDiska))
-    (setf (OdrediNajmanjiNivo index  (gameState-popunjenaPolja state)) lista)
+    (setf (gameState-popunjenaPolja state) (append (gameState-popunjenaPolja state) (ParLista (- iDiska index) (+ iDiska index) l maxi iDiska jDiska)))
+    (setf lista (OdrediNajmanjiNivo index  (gameState-popunjenaPolja state)))
     (cond
         ((null lista) (OdrediNajblizi iDiska jDiska maxi l (1+ index)))
-        (t(lista))
+        (t lista)
     )
 )
-
+;;Obradjuej red i rezultat joj je lista gde svaki element kao svoj prvi element ima br poteza do njega i drugi element lista koordinata
+;;(i,j-koordinate elemnta koji se u trenutku ispituje, l-red sa kojim radimo, iDiska,jDiska-koordinate polja sa kog se prebacuje)
 (defun ObradiListu (i j l iDiska jDiska)
     (cond
         ((null l)'())
         ((> (VisinaSteka (car l)) 0)(if (AND (equalp i iDiska) (equalp j jDiska))   
                                     (ObradiListu i (1+ j) (cdr l) iDiska jDiska)
                                     (if (> (abs (- i iDiska)) (abs (- j jDiska)))
-                                        (cons (cons (- i iDiska) (list 'i 'j)) (ObradiListu i (1+ j) (cdr l) iDiska jDiska))
-                                        (cons (cons (- j jDiska) (list 'i 'j))(ObradiListu i (1+ j) (cdr l) iDiska jDiska))
+                                        (cons (list (- i iDiska) (list i j)) (ObradiListu i (1+ j) (cdr l) iDiska jDiska))
+                                        (cons (list (- j jDiska) (list i j))(ObradiListu i (1+ j) (cdr l) iDiska jDiska))
                                     )))
         (t(ObradiListu i (1+ j) (cdr l) iDiska jDiska))
     )
 )
-
+;;Vraca elemente sa najmanjeg nivoa, ako je najmanji nivo jednak indexu 
 (defun OdrediNajmanjiNivo (index l)
     (cond
         ((null l)'())
@@ -157,7 +169,7 @@
         (t(OdrediNajmanjiNivo index (cdr l)))
     )
 )
-
+;;Spaja rezultate dve liste nastale kao rez ObradiListu funkcije(i1-BR1_reda,i2-BR2_reda,l-tabla, maxi-maximalna velicina reda, iDiska,jDiska-koordinate polja sa kog se prebacuje)
 (defun ParLista (i1 i2 l maxi iDiska jDiska)
     (case
     (equalp i1 i2) (ObradiListu i1 0 (PronadjiElement1 i1 l 0) iDiska jDiska)
