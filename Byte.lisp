@@ -38,6 +38,42 @@
     ;; (setf (gameState-tabla state) (PronadjiElement+ 1 2 (gameState-tabla state) 0 t "dodaj" 'O))
     ;; (setf (gameState-tabla state) (PronadjiElement+ 1 1 (gameState-tabla state) 0 t "izbaci" 'X))
 )
+(defun Pomeri (iDiska jDiska iPomeraj jPomeraj visina)
+    (setf lista (ProveriIgraca iPomeraj jPomeraj visina))
+    (if (> (length lista) 0)
+        (if (equalp (length lista) 0)
+            (
+                (setf (gameState-tabla state) (PronadjiElement+ iPomeraj jPomeraj (gameState-tabla state) 0 t "dodaj" lista))
+                (setf (gameState-tabla state) (PronadjiElement+ iDiska jDiska (gameState-tabla state) 0 t "izbaci" visina))
+            )
+    ))
+)
+
+(defun ProveriIgraca (iPomeraj jPomeraj visina)
+     (setf lista (VratiDeoListe (- visina 1) (car (cdr (PronadjiElement iPomeraj jPomeraj (gameState-tabla state))))0))
+     (if(equalp (gameState-naPotezu state) (car lista))
+        lista
+        '()
+     )
+)
+(defun VratiDeoListe (i l index)
+    (cond 
+        ((null l)'())
+        ((equalp i 0) l)
+        ((equalp (- i 1) index)(cdr l))
+        (t(VratiDeoListe i (cdr l) (1+ index)))
+    )
+)
+
+(defun LegitimnoPomeranje (iPomeraj jPomeraj iDiska jDiska)
+    (cond
+        ((AND(equalp (- iPomeraj iDiska) -1)(equalp (- jPomeraj jDiska) -1)) t)
+        ((AND(equalp (- iPomeraj iDiska) 1)(equalp (- jPomeraj jDiska) 1)) t)
+        ((AND(equalp (- iPomeraj iDiska) -1)(equalp (- jPomeraj jDiska) 1)) t)
+        ((AND(equalp (- iPomeraj iDiska) 1)(equalp (- jPomeraj jDiska) -1)) t)
+        (t '())
+    )
+)
 ;;za generisanje tabele 
 (defun GenerisiTabelu(velicina i)
     (cond
