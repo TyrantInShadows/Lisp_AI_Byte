@@ -163,7 +163,7 @@
 ;;odredjuje koja vrsta diska ce biti na toj poziciji(i-Br_reda)
 (defun OdrediDisk (i)
     (cond
-        ((OR (equalp i 0) (equal i 7))'())
+        ((OR (equalp i 0) (equal i (- (gameState-velicinaTable state) 1)))'())
         ((equalp 0 (mod i 2))(list 'X))
         (t (list 'O))
     )
